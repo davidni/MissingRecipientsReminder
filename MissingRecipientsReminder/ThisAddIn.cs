@@ -30,7 +30,6 @@ namespace MissingRecipientsReminder
             string[] lines = body.Replace("\r\n", "\n").Split('\n');
 
             var missingRecipients = new List<string>();
-            bool foundFirst = false;
             foreach (string line in lines)
             {
                 if (string.IsNullOrWhiteSpace(line))
@@ -39,19 +38,14 @@ namespace MissingRecipientsReminder
                 }
 
                 List<string> addedInBodyRecipients = ExtractRecipientsFromLine(line);
-                if (addedInBodyRecipients != null && addedInBodyRecipients.Count > 0)
+                if (addedInBodyRecipients == null || addedInBodyRecipients.Count == 0)
                 {
-                    missingRecipients.AddRange(addedInBodyRecipients);
-                    foundFirst = true;
+                    // Stop at the first line that has content which doesn't follow
+                    // the patterns we're looking for.
+                    break;
                 }
-                else
-                {
-                    if (foundFirst)
-                    {
-                        // No more recipient lines, so we stop before reading all the content
-                        break;
-                    }
-                }
+
+                missingRecipients.AddRange(addedInBodyRecipients);
             }
 
             foreach (Outlook.Recipient recipient in mailItem.Recipients)
